@@ -1,0 +1,5 @@
+[package]
+
+name = "rust_invaders"
+version = "0.0.1"
+authors = [ "Adam Londero <alondero@github.com>" ]
