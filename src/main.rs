@@ -1,26 +1,15 @@
 extern crate sdl2;
 
-#[macro_use]
-mod events;
+mod engine;
 
 use sdl2::pixels::Color;
-
-struct_events! {
-    keyboard: {
-        key_escape: Escape,
-        key_up: Up,
-        key_down: Down
-    },
-    else: {
-    	quit: Quit { .. }
-    }
-}
+use engine::Events;
 
 fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video = sdl_context.video().unwrap();
 
-    let window = video.window("Rust Invaders", 800, 600)
+    let window = video.window("Rust Invaders", 1280, 720)
         .position_centered()
         .opengl()
         .build()
