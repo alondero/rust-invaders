@@ -1,5 +1,6 @@
 #[macro_use]
 mod events;
+pub mod data;
 
 use sdl2::render::Renderer;
 use sdl2::pixels::Color;
@@ -9,6 +10,8 @@ struct_events! {
         key_escape: Escape,
         key_up: Up,
         key_down: Down,
+        key_left: Left,
+        key_right: Right,
         key_space: Space
     },
     else: {
@@ -19,6 +22,13 @@ struct_events! {
 pub struct Engine<'window> {
 	pub events: Events,
 	pub renderer: Renderer<'window>
+}
+
+impl<'window> Engine<'window> {
+    pub fn output_size(&self) -> (f64, f64) {
+        let (w, h) = self.renderer.output_size().unwrap();
+        (w as f64, h as f64)
+    }
 }
 
 pub enum ViewAction {
@@ -67,6 +77,7 @@ pub fn spawn<F>(title: &str, init: F) where F: Fn(&mut Engine) -> Box<View> {
     let window = video.window(title, 1280, 720)
         .position_centered()
         .opengl()
+        .resizable()
         .build()
         .unwrap();
 
@@ -101,7 +112,7 @@ pub fn spawn<F>(title: &str, init: F) where F: Fn(&mut Engine) -> Box<View> {
             fps = 0;
         }
 
-		context.events.pump();
+		context.events.pump(&mut context.renderer);
 
         match current_view.render(&mut context, elapsed) {
             ViewAction::None => context.renderer.present(),
