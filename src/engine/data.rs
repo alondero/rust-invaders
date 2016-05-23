@@ -31,4 +31,23 @@ impl Rectangle {
                else { self.y },
         })
     }
+
+    pub fn contains(&self, rect: Rectangle) -> bool {
+        let xmin = rect.x;
+        let xmax = xmin + rect.w;
+        let ymin = rect.y;
+        let ymax = ymin + rect.h;
+
+        xmin >= self.x && xmin <= self.x + self.w &&
+        xmax >= self.x && xmax <= self.x + self.w &&
+        ymin >= self.y && ymin <= self.y + self.h &&
+        ymax >= self.y && ymax <= self.y + self.h
+    }
+
+    pub fn overlaps(&self, other: Rectangle) -> bool {
+        self.x < other.x + other.w &&
+        self.x + self.w > other.x &&
+        self.y < other.y + other.h &&
+        self.y + self.h > other.y
+    }
 }
