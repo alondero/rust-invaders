@@ -116,7 +116,6 @@ pub fn spawn<F>(title: &str, init: F) where F: Fn(&mut Engine) -> Box<View> {
         fps += 1;
 
         if now - last_second > 1_000 {
-            println!("FPS: {}", fps);
             last_second = now;
             fps = 0;
         }

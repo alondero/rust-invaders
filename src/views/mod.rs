@@ -1,12 +1,27 @@
 use engine::{Engine, View, ViewAction};
 use engine::data::Rectangle;
-use engine::graphics::Sprite;
+use engine::graphics::{Sprite, CopySprite};
 use sdl2::pixels::Color;
 use std::path::Path;
 use sdl2::render::{Texture, TextureQuery};
 use sdl2_image::LoadTexture;
 
 const PLAYER_SPEED: f64 = 360.0;
+const SHIP_W: f64 = 43.0;
+const SHIP_H: f64 = 39.0;
+
+#[derive(Clone, Copy)]
+enum ShipFrame {
+    UpNorm   = 0,
+    UpFast   = 1,
+    UpSlow   = 2,
+    MidNorm  = 3,
+    MidFast  = 4,
+    MidSlow  = 5,
+    DownNorm = 6,
+    DownFast = 7,
+    DownSlow = 8
+}
 
 pub struct ShipView {
     player: Ship
@@ -14,18 +29,30 @@ pub struct ShipView {
 
 impl ShipView {
     pub fn new(engine: &mut Engine) -> ShipView {
-        let sprite = Sprite::load(&mut engine.renderer, "assets/spaceship.png").unwrap();
-        let (w, h) = sprite.size();
+        let spritesheet = Sprite::load(&mut engine.renderer, "assets/spaceship.png").unwrap();
+        let mut sprites = Vec::with_capacity(9);
+
+        for y in 0..3 {
+            for x in 0..3 {
+                sprites.push(spritesheet.region(Rectangle {
+                    x: SHIP_W * x as f64,
+                    y: SHIP_H * y as f64,
+                    w: SHIP_W,
+                    h: SHIP_H
+                }).unwrap());
+            }
+        }
 
         ShipView {            
             player: Ship {
                 rect: Rectangle {
                     x: 64.0,
                     y: 64.0,
-                    w: w,
-                    h: h,
+                    w: SHIP_W,
+                    h: SHIP_H
                 },
-                sprite: sprite 
+                sprites: sprites,
+                current: ShipFrame::MidNorm
             }
         }
     }
@@ -69,13 +96,25 @@ impl View for ShipView {
 
         self.player.rect = self.player.rect.move_inside(movable_region).unwrap();
 
+        self.player.current =
+            if dx == 0.0 && dy < 0.0       { ShipFrame::UpNorm }
+            else if dx > 0.0 && dy < 0.0   { ShipFrame::UpFast }
+            else if dx < 0.0 && dy < 0.0   { ShipFrame::UpSlow }
+            else if dx == 0.0 && dy == 0.0 { ShipFrame::MidNorm }
+            else if dx > 0.0 && dy == 0.0  { ShipFrame::MidFast }
+            else if dx < 0.0 && dy == 0.0  { ShipFrame::MidSlow }
+            else if dx == 0.0 && dy > 0.0  { ShipFrame::DownNorm }
+            else if dx > 0.0 && dy > 0.0   { ShipFrame::DownFast }
+            else if dx < 0.0 && dy > 0.0   { ShipFrame::DownSlow }
+            else { unreachable!() };
+
         context.renderer.set_draw_color(Color::RGB(0, 0, 0));
         context.renderer.clear();
 
         context.renderer.set_draw_color(Color::RGB(200, 200, 50));
         context.renderer.fill_rect(self.player.rect.to_sdl());
 
-        self.player.sprite.render(&mut context.renderer, self.player.rect);
+        context.renderer.copy_sprite(&mut self.player.sprites[self.player.current as usize], self.player.rect);
 
         ViewAction::None
     }
@@ -83,5 +122,6 @@ impl View for ShipView {
 
 struct Ship {
     rect: Rectangle,
-    sprite: Sprite
+    sprites: Vec<Sprite>,
+    current: ShipFrame
 }
