@@ -1,6 +1,7 @@
 #[macro_use]
 mod events;
 pub mod data;
+pub mod graphics;
 
 use sdl2::render::Renderer;
 use sdl2::pixels::Color;

@@ -1,6 +1,10 @@
 use engine::{Engine, View, ViewAction};
 use engine::data::Rectangle;
+use engine::graphics::Sprite;
 use sdl2::pixels::Color;
+use std::path::Path;
+use sdl2::render::{Texture, TextureQuery};
+use sdl2_image::LoadTexture;
 
 const PLAYER_SPEED: f64 = 360.0;
 
@@ -10,14 +14,18 @@ pub struct ShipView {
 
 impl ShipView {
     pub fn new(engine: &mut Engine) -> ShipView {
-        ShipView {
+        let sprite = Sprite::load(&mut engine.renderer, "assets/spaceship.png").unwrap();
+        let (w, h) = sprite.size();
+
+        ShipView {            
             player: Ship {
                 rect: Rectangle {
                     x: 64.0,
                     y: 64.0,
-                    w: 32.0,
-                    h: 32.0,
-                }
+                    w: w,
+                    h: h,
+                },
+                sprite: sprite 
             }
         }
     }
@@ -67,10 +75,13 @@ impl View for ShipView {
         context.renderer.set_draw_color(Color::RGB(200, 200, 50));
         context.renderer.fill_rect(self.player.rect.to_sdl());
 
+        self.player.sprite.render(&mut context.renderer, self.player.rect);
+
         ViewAction::None
     }
 }
 
 struct Ship {
-    rect: Rectangle
+    rect: Rectangle,
+    sprite: Sprite
 }
