@@ -29,6 +29,13 @@ impl<'window> Engine<'window> {
         let (w, h) = self.renderer.output_size().unwrap();
         (w as f64, h as f64)
     }
+
+    fn new(events: Events, renderer: Renderer<'window>) -> Engine<'window> {
+    	Engine {
+    		events: events,
+    		renderer: renderer
+    	}
+    }
 }
 
 pub enum ViewAction {
@@ -73,6 +80,7 @@ pub fn spawn<F>(title: &str, init: F) where F: Fn(&mut Engine) -> Box<View> {
     let sdl_context = ::sdl2::init().unwrap();
     let video = sdl_context.video().unwrap();
     let mut timer = sdl_context.timer().unwrap();
+	let _image_context = ::sdl2_image::init(::sdl2_image::INIT_PNG).unwrap();
 
     let window = video.window(title, 1280, 720)
         .position_centered()
@@ -81,10 +89,10 @@ pub fn spawn<F>(title: &str, init: F) where F: Fn(&mut Engine) -> Box<View> {
         .build()
         .unwrap();
 
-    let mut context = Engine {
-    	events: Events::new(sdl_context.event_pump().unwrap()),
-    	renderer: window.renderer().accelerated().build().unwrap()
-    };
+    let mut context = Engine::new(
+    	Events::new(sdl_context.event_pump().unwrap()),
+    	window.renderer().accelerated().build().unwrap()
+    );
 
     let mut current_view = init(&mut context);
 

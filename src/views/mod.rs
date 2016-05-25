@@ -65,7 +65,7 @@ impl View for ShipView {
         context.renderer.clear();
 
         context.renderer.set_draw_color(Color::RGB(200, 200, 50));
-        context.renderer.fill_rect(self.player.rect.to_sdl().unwrap());
+        context.renderer.fill_rect(self.player.rect.to_sdl());
 
         ViewAction::None
     }

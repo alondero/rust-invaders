@@ -9,10 +9,10 @@ pub struct Rectangle {
 }
 
 impl Rectangle {
-    pub fn to_sdl(self) -> Option<SdlRect> {
+    pub fn to_sdl(self) -> SdlRect {
         assert!(self.w >= 0.0 && self.h >= 0.0);
 
-        SdlRect::new(self.x as i32, self.y as i32, self.w as u32, self.h as u32).unwrap()
+        SdlRect::new(self.x as i32, self.y as i32, self.w as u32, self.h as u32)
     }
 
     pub fn move_inside(self, parent: Rectangle) -> Option<Rectangle> {
