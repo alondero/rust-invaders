@@ -3,8 +3,12 @@ mod events;
 pub mod data;
 pub mod graphics;
 
+use self::graphics::Sprite;
 use sdl2::render::Renderer;
 use sdl2::pixels::Color;
+use sdl2_ttf::Sdl2TtfContext;
+use std::collections::HashMap;
+use std::path::Path;
 
 struct_events! {
     keyboard: {
@@ -22,7 +26,10 @@ struct_events! {
 
 pub struct Engine<'window> {
 	pub events: Events,
-	pub renderer: Renderer<'window>
+	pub renderer: Renderer<'window>,
+	pub ttf_context: Sdl2TtfContext,
+
+	cached_fonts: HashMap<(&'static str, i32), ::sdl2_ttf::Font>
 }
 
 impl<'window> Engine<'window> {
@@ -31,11 +38,29 @@ impl<'window> Engine<'window> {
         (w as f64, h as f64)
     }
 
-    fn new(events: Events, renderer: Renderer<'window>) -> Engine<'window> {
+    fn new(events: Events, renderer: Renderer<'window>, ttf_context: Sdl2TtfContext) -> Engine<'window> {
     	Engine {
     		events: events,
-    		renderer: renderer
+    		renderer: renderer,
+    		ttf_context: ttf_context,
+
+    		cached_fonts: HashMap::new()
     	}
+    }
+
+    pub fn ttf_str_sprite(&mut self, text: &str, font_path: &'static str, size: i32, colour: Color) -> Option<Sprite> {
+    	if let Some(font) = self.cached_fonts.get(&(font_path, size)) {
+            return font.render(text)
+						.blended(colour).ok()
+	    				.and_then(|surface| self.renderer.create_texture_from_surface(&surface).ok())
+	    				.map(Sprite::new)
+        }
+
+    	self.ttf_context.load_font(Path::new(font_path), size as u16).ok()
+    		.and_then(|font| {
+    			self.cached_fonts.insert((font_path, size), font);
+    			self.ttf_str_sprite(text, font_path, size, colour)
+    		})
     }
 }
 
@@ -82,6 +107,7 @@ pub fn spawn<F>(title: &str, init: F) where F: Fn(&mut Engine) -> Box<View> {
     let video = sdl_context.video().unwrap();
     let mut timer = sdl_context.timer().unwrap();
 	let _image_context = ::sdl2_image::init(::sdl2_image::INIT_PNG).unwrap();
+	let _ttf_context = ::sdl2_ttf::init().unwrap();
 
     let window = video.window(title, 1280, 720)
         .position_centered()
@@ -92,7 +118,8 @@ pub fn spawn<F>(title: &str, init: F) where F: Fn(&mut Engine) -> Box<View> {
 
     let mut context = Engine::new(
     	Events::new(sdl_context.event_pump().unwrap()),
-    	window.renderer().accelerated().build().unwrap()
+    	window.renderer().accelerated().build().unwrap(),
+    	_ttf_context
     );
 
     let mut current_view = init(&mut context);
